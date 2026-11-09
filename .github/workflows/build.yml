@@ -30,6 +30,8 @@ jobs:
 
       - name: Build AutoTyper.exe
         shell: bash
+        env:
+          MSYS_NO_PATHCONV: '1' # keep "/fo" from being rewritten into a Windows path
         run: |
           cd src
           zig rc /fo app.res app.rc
