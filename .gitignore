@@ -1,0 +1,14 @@
+# Build outputs
+*.exe
+*.res
+*.obj
+*.o
+*.pdb
+*.lib
+zig-cache/
+.zig-cache/
+zig-out/
+
+# Test binaries
+input_plan_test
+text_compare_test
