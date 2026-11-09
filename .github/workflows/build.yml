@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
+
+      - name: Unit tests
+        shell: bash
+        run: |
+          zig c++ -target x86_64-windows-gnu -std=c++17 -O2 tests/input_plan_test.cpp -o input_plan_test.exe
+          ./input_plan_test.exe
+          zig c++ -target x86_64-windows-gnu -std=c++17 -O2 tests/text_compare_test.cpp -o text_compare_test.exe
+          ./text_compare_test.exe
+
+      - name: Build AutoTyper.exe
+        shell: bash
+        run: |
+          cd src
+          zig rc /fo app.res app.rc
+          cd ..
+          zig c++ -target x86_64-windows-gnu -std=c++17 -O2 -municode -Wl,--subsystem,windows -static src/main.cpp src/app.res -lcomctl32 -lgdi32 -luser32 -o AutoTyper.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoTyper
+          path: |
+            AutoTyper.exe
+            LICENSE
+            licenses/
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AutoTyper.exe
+          generate_release_notes: true
